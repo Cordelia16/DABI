@@ -13,6 +13,9 @@ library(tidyverse)
 library(lubridate)
 library(GGally)
 library(zoo)
+library(rpart)
+library(rpart.plot)
+library(Metrics)
 ```
 
 ## Data
@@ -137,6 +140,10 @@ For both data sets, a “yr_month” variable - in the format “Jan 2000” - w
 ```{r create_yr_month, echo=FALSE}
 weather_data$yr_month <- as.yearmon(weather_data$date)
 sales_data$yr_month <- as.yearmon(sales_data$date)
+
+# Remove rows from "weather_data" so number of rows is equivalent 
+weather_data <- subset(weather_data, date > as.Date("2021-09-26"))
+weather_data <- subset(weather_data, date < as.Date("2022-08-19"))
 ```
 
 Next we combine the two datasets so that we can create a correlation matrix to determine the significant variables for our chosen models. The “uber”, “menulog”, “deliveroo”, and “total” variables were appended to the weather data to create a master data frame. Next, the “rain_today” and “rain_tmrw” variables were modified to contain binary values. Then we removed the observations where total sales equals zero. Finally, we created a subset of the master data frame containing only numeric variables to allow for the creation of the correlation matrix.
@@ -153,3 +160,48 @@ corr_master_df <- subset(master_df, select = -c(1, 7, 9, 13, 14, 19, 20, 28, 30)
 #corr_master_df <- subset(master_df, select = -c(1:3, 5:21, 28, 30))
 ggcorr(corr_master_df, label = TRUE)
 ```
+
+## Analyse
+
+### 1. Describe the modelling procedure with enough detail to allow someone else to repeat the modelling
+
+```{r Split dataset, echo=FALSE}
+df_size <- floor(0.75 * nrow(master_df))
+
+set.seed(123)
+train_ind <- sample(seq_len(nrow(master_df)), size = df_size)
+
+train <- master_df[train_ind, ]
+test <- master_df[-train_ind, ]
+```
+
+```{r Linear Regression, echo=FALSE}
+model1 <- lm(rainfall ~ min_temp + max_temp + sun_sh_hr + `9am_hum` + `9am_pres` + `3pm_temp` + `3pm_hum`, data= train)
+summary(model1)
+
+pred = predict(model1, test, method = "anova")
+rmse_lm = rmse(pred, test$rainfall)
+print(rmse_lm)
+```
+```{r decision tree using regression, echo=FALSE}
+model2 <- rpart(rainfall ~ min_temp + max_temp + sun_sh_hr + `9am_hum` + `9am_pres` + `3pm_temp` + `3pm_hum`, 
+             method = "anova", data = train, control =rpart.control(minsplit =1,minbucket=1, cp=.02))
+pred2 = predict(model2, test, method = "anova")
+err2 = sum(pred2 - test$rainfall)
+rmse_tree = rmse(pred2, test$rainfall)
+
+print(rmse_tree)
+```
+```{r decision tree plot, echo=FALSE}
+# Plot
+rpart.plot(model2, box.palette="RdBu", shadow.col="gray",uniform = TRUE,
+     main = "Rainfall Decision Tree using Regression")
+
+print(model2)
+
+```
+
+
+
+
+
