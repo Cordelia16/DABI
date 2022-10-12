@@ -183,21 +183,23 @@ pred = predict(model1, test, method = "anova")
 rmse_lm = rmse(pred, test$rainfall)
 print(rmse_lm)
 ```
+We chose two models for our prediction which are linear regression and decision tree. 
+As we can see that rmse in model 1 is 2.5266, p value is 1.686e-06 which has shown that our features are useful for our prediction in the next part. 
+
 ```{r decision tree using regression, echo=FALSE}
 model2 <- rpart(rainfall ~ min_temp + max_temp + sun_sh_hr + `9am_hum` + `9am_pres` + `3pm_temp` + `3pm_hum`, 
              method = "anova", data = train, control =rpart.control(minsplit =1,minbucket=1, cp=.02))
 pred2 = predict(model2, test, method = "anova")
 err2 = sum(pred2 - test$rainfall)
 rmse_tree = rmse(pred2, test$rainfall)
-
+summary(model1)
 print(rmse_tree)
 ```
+rmse in model2 is 3.024 which is almost the same as model1 which we can use both model for our prediction in the next part.
 ```{r decision tree plot, echo=FALSE}
 # Plot
 rpart.plot(model2, box.palette="RdBu", shadow.col="gray",uniform = TRUE,
      main = "Rainfall Decision Tree using Regression")
-
-print(model2)
 
 ```
 
