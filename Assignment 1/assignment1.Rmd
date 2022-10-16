@@ -175,19 +175,28 @@ train <- master_df[train_ind, ]
 test <- master_df[-train_ind, ]
 ```
 
-```{r Linear Regression, echo=FALSE}
-model1 <- lm(rainfall ~ min_temp + max_temp + sun_sh_hr + `9am_hum` + `9am_pres` + `3pm_temp` + `3pm_hum`, data= train)
-summary(model1)
+```{r Logistic Regression, echo=FALSE}
 
-pred = predict(model1, test, method = "anova")
-rmse_lm = rmse(pred, test$rainfall)
-print(rmse_lm)
+# Training model
+logistic_model <- glm(as.factor(train$rain_tmrw) ~ min_temp + max_temp + sun_sh_hr + `9am_hum` + `9am_pres` +`3pm_temp` + `3pm_hum`,
+                      data = train, 
+                      family=binomial)
+logistic_model
+   
+# Summary
+summary(logistic_model)
+
+# Predict test data based on model
+predict_reg <- predict(logistic_model, 
+                       test, type = "response")
+predict_reg  
+
 ```
 We chose two models for our prediction which are linear regression and decision tree. 
 As we can see that rmse in model 1 is 2.5266, p value is 1.686e-06 which has shown that our features are useful for our prediction in the next part. 
 
 ```{r decision tree using regression, echo=FALSE}
-model2 <- rpart(rainfall ~ min_temp + max_temp + sun_sh_hr + `9am_hum` + `9am_pres` + `3pm_temp` + `3pm_hum`, 
+model2 <- rpart(rain_tmrw ~ min_temp + max_temp + sun_sh_hr + `9am_hum` + `9am_pres` + `3pm_temp` + `3pm_hum`, 
              method = "anova", data = train, control =rpart.control(minsplit =1,minbucket=1, cp=.02))
 pred2 = predict(model2, test, method = "anova")
 err2 = sum(pred2 - test$rainfall)
@@ -202,7 +211,6 @@ rpart.plot(model2, box.palette="RdBu", shadow.col="gray",uniform = TRUE,
      main = "Rainfall Decision Tree using Regression")
 
 ```
-
 
 
 
