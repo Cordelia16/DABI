@@ -201,7 +201,6 @@ model2 <- rpart(rain_tmrw ~ min_temp + max_temp + sun_sh_hr + `9am_hum` + `9am_p
 pred2 = predict(model2, test, method = "anova")
 err2 = sum(pred2 - test$rainfall)
 rmse_tree = rmse(pred2, test$rainfall)
-summary(model1)
 print(rmse_tree)
 ```
 rmse in model2 is 3.024 which is almost the same as model1 which we can use both model for our prediction in the next part.
